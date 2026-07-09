@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCars } from '@/lib/api';
 import type { Car, CarFilters as Filters } from '@/types';
@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { ErrorMessage } from '@/components/shared/error-message';
 import { Button } from '@/components/ui/button';
 
-export default function CarsPage() {
+function CarsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -131,5 +131,13 @@ export default function CarsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CarsPage() {
+  return (
+    <Suspense fallback={<div className="py-24"><LoadingSpinner message="Loading fleet..." /></div>}>
+      <CarsPageContent />
+    </Suspense>
   );
 }
