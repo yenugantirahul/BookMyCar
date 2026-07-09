@@ -1,0 +1,29 @@
+{
+  "name": "@carrental/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared types, schemas, and constants for the CarRental platform",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "dev": "tsc --watch --project tsconfig.json",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --max-warnings 0",
+    "lint:fix": "eslint src --fix",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\""
+  },
+  "dependencies": {
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "20.16.1",
+    "typescript": "5.5.4"
+  }
+}
