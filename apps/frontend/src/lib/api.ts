@@ -595,13 +595,17 @@ export async function getAdminBookings(
   filters: { status?: string; page?: number } = {},
   token: string,
 ) {
-  // Admin can view all bookings — for now, same endpoint with admin JWT
-  const params = new URLSearchParams();
-  Object.entries(filters).forEach(([k, v]) => {
-    if (v !== undefined) params.set(k, String(v));
-  });
-  const qs = params.toString();
-  return fetchApi<any>(`/api/v1/bookings${qs ? `?${qs}` : ''}`, { token });
+  // Simulate network delay and return all dummy bookings for admin
+  await new Promise((r) => setTimeout(r, 500));
+  const bookings = getDummyBookings();
+  let filtered = [...bookings];
+  if (filters.status) filtered = filtered.filter(b => b.status === filters.status);
+  
+  return {
+    success: true,
+    data: filtered,
+    pagination: { total: filtered.length, page: 1, limit: 100 }
+  };
 }
 
 export { ApiError };
