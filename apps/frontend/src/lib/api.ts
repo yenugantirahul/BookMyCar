@@ -349,9 +349,6 @@ async function fetchApi<T>(
 
 // ── Cars ─────────────────────────────────────────────────────────────────────
 export async function getCars(filters: CarFilters = {}, token?: string) {
-  // Simulate network delay and return dummy data
-  await new Promise((r) => setTimeout(r, 500));
-  
   let filtered = [...DUMMY_CARS];
   if (filters.category) filtered = filtered.filter(c => c.category === filters.category);
   if (filters.location) filtered = filtered.filter(c => c.location.toLowerCase().includes(filters.location!.toLowerCase()));
@@ -365,7 +362,6 @@ export async function getCars(filters: CarFilters = {}, token?: string) {
 }
 
 export async function getCar(id: string, token?: string) {
-  await new Promise((r) => setTimeout(r, 300));
   const car = DUMMY_CARS.find(c => c.id === id);
   if (!car) throw new ApiError(404, 'Car not found');
   
@@ -441,7 +437,6 @@ function saveDummyBookings(bookings: any[]) {
 }
 // ── Bookings ──────────────────────────────────────────────────────────────────
 export async function getBookings(filters: { status?: string; page?: number } = {}, token: string) {
-  await new Promise((r) => setTimeout(r, 500));
   const bookings = getDummyBookings();
   let filtered = [...bookings];
   if (filters.status) filtered = filtered.filter(b => b.status === filters.status);
@@ -454,7 +449,6 @@ export async function getBookings(filters: { status?: string; page?: number } = 
 }
 
 export async function getBooking(id: string, token: string) {
-  await new Promise((r) => setTimeout(r, 400));
   const bookings = getDummyBookings();
   const booking = bookings.find(b => b.id === id);
   if (!booking) throw new ApiError(404, 'Booking not found');
@@ -468,7 +462,6 @@ export async function createBooking(data: {
   endDate: string;
   notes?: string;
 }, token: string) {
-  await new Promise((r) => setTimeout(r, 800));
   const car = DUMMY_CARS.find(c => c.id === data.carId);
   if (!car) throw new ApiError(404, 'Car not found');
 
@@ -500,7 +493,6 @@ export async function createBooking(data: {
 }
 
 export async function cancelBooking(id: string, reason: string | undefined, token: string) {
-  await new Promise((r) => setTimeout(r, 500));
   const bookings = getDummyBookings();
   const booking = bookings.find(b => b.id === id);
   if (!booking) throw new ApiError(404, 'Booking not found');
@@ -513,7 +505,6 @@ export async function cancelBooking(id: string, reason: string | undefined, toke
 }
 
 export async function confirmBookingPayment(id: string) {
-  await new Promise((r) => setTimeout(r, 800)); // Simulate payment processing delay
   const bookings = getDummyBookings();
   const booking = bookings.find(b => b.id === id);
   if (!booking) throw new ApiError(404, 'Booking not found');
@@ -551,7 +542,6 @@ function getDummyProfile() {
 }
 
 export async function getProfile(token: string) {
-  await new Promise((r) => setTimeout(r, 200));
   return {
     success: true,
     data: getDummyProfile()
@@ -559,7 +549,6 @@ export async function getProfile(token: string) {
 }
 
 export async function updateProfile(data: any, token: string) {
-  await new Promise((r) => setTimeout(r, 400));
   const currentProfile = getDummyProfile();
   const updatedProfile = { ...currentProfile, ...data };
   
@@ -595,8 +584,6 @@ export async function getAdminBookings(
   filters: { status?: string; page?: number } = {},
   token: string,
 ) {
-  // Simulate network delay and return all dummy bookings for admin
-  await new Promise((r) => setTimeout(r, 500));
   const bookings = getDummyBookings();
   let filtered = [...bookings];
   if (filters.status) filtered = filtered.filter(b => b.status === filters.status);

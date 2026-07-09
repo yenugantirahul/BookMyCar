@@ -7,6 +7,26 @@ import { Car, User as UserIcon, LogOut, Shield } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getProfile } from '@/lib/api';
 import { SignInButton, UserButton } from '@clerk/nextjs';
+import { motion } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+
+const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
+  return (
+    <Link href={href} className="relative px-2 py-1 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors group">
+      {children}
+      <motion.div
+        className="absolute bottom-0 left-0 h-[2px] w-full bg-indigo-600 origin-left"
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: isActive ? 1 : 0 }}
+        whileHover={{ scaleX: 1 }}
+        transition={{ duration: 0.2, ease: 'easeInOut' }}
+      />
+    </Link>
+  );
+};
 
 export function Navbar() {
   const { user, session, signOut } = useAuth();
@@ -30,28 +50,22 @@ export function Navbar() {
     }
   }, [user]);
 
-  // No longer need manual sign out since UserButton handles it.
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center space-x-2 font-bold text-xl text-blue-600">
-          <Car className="h-6 w-6" />
-          <span>CarRental</span>
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 bg-white/75 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 shadow-sm transition-all">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
+        <Link href="/" className="flex items-center space-x-2 font-black text-xl tracking-tight text-slate-900 group">
+          <div className="bg-indigo-600 text-white p-1.5 rounded-lg group-hover:bg-slate-900 transition-colors shadow-sm">
+            <Car className="h-5 w-5" />
+          </div>
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">BookMyCar</span>
         </Link>
 
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link href="/cars" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
-            Browse Cars
-          </Link>
+        <nav className="hidden md:flex items-center space-x-8">
+          <NavLink href="/cars">Browse Fleet</NavLink>
           {user && (
             <>
-              <Link href="/bookings" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
-                My Bookings
-              </Link>
-              <Link href="/profile" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
-                Profile
-              </Link>
+              <NavLink href="/bookings">My Bookings</NavLink>
+              <NavLink href="/profile">Profile</NavLink>
             </>
           )}
         </nav>
@@ -62,20 +76,20 @@ export function Navbar() {
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className="flex items-center space-x-1 text-xs font-semibold bg-red-50 text-red-700 px-2.5 py-1 rounded-full hover:bg-red-100 transition-colors"
+                  className="flex items-center space-x-1 text-xs font-bold bg-slate-900 text-white px-3 py-1.5 rounded-full hover:bg-indigo-600 transition-all shadow-sm"
                 >
                   <Shield className="h-3 w-3" />
                   <span>Admin</span>
                 </Link>
               )}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 border-l border-slate-200 pl-4">
                 <UserButton afterSignOutUrl="/" />
               </div>
             </>
           ) : (
             <div className="flex items-center space-x-2">
               <SignInButton mode="modal">
-                <button className="text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors">
+                <button className="text-sm font-semibold bg-slate-900 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-xl transition-all shadow-md hover:shadow-indigo-500/25">
                   Sign In
                 </button>
               </SignInButton>

@@ -1,81 +1,90 @@
+'use client';
+
 import Link from 'next/link';
-import { Car as CarIcon, MapPin, Users, Fuel } from 'lucide-react';
+import Image from 'next/image';
+import { Car as CarIcon, MapPin } from 'lucide-react';
 import type { Car } from '@/types';
 import { formatCurrency, getCategoryLabel } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 export function CarCard({ car }: { car: Car }) {
   return (
-    <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-md transition-all flex flex-col h-full">
+    <motion.div 
+      whileHover={{ y: -6 }}
+      className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all flex flex-col h-full group"
+    >
       {/* Image Gallery Mockup */}
-      <div className="relative aspect-video w-full bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+      <div className="relative aspect-[4/3] w-full bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
         {car.primaryImageUrl ? (
-          <img
-            src={car.primaryImageUrl}
-            alt={`${car.make} ${car.model}`}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <CarIcon className="h-12 w-12 text-gray-300" />
-        )}
-        <div className="absolute top-3 left-3 bg-blue-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full uppercase">
+            <Image
+              src={car.primaryImageUrl}
+              alt={`${car.make} ${car.model}`}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+            />
+          ) : (
+            <CarIcon className="h-12 w-12 text-slate-300" />
+          )}
+        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-slate-900 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
           {getCategoryLabel(car.category)}
         </div>
         {!car.isAvailable && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+            <span className="bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-full uppercase tracking-wider shadow-lg">
               Unavailable
             </span>
           </div>
         )}
       </div>
 
-      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+      <div className="p-6 flex-1 flex flex-col justify-between space-y-6">
         <div>
           <div className="flex justify-between items-start">
-            <h3 className="text-lg font-bold text-gray-900 leading-tight">
+            <h3 className="text-xl font-bold text-slate-900 leading-tight">
               {car.make} {car.model}
             </h3>
-            <span className="text-xs text-gray-400 font-medium shrink-0 ml-2">
+            <span className="text-xs text-slate-500 font-medium shrink-0 ml-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
               {car.year}
             </span>
           </div>
-          <p className="text-xs text-gray-400 mt-1 flex items-center">
-            <MapPin className="h-3 w-3 mr-1" />
-            <span>{car.location}</span>
+          <p className="text-sm text-slate-500 mt-2 flex items-center">
+            <MapPin className="h-4 w-4 mr-1 text-slate-400" />
+            <span className="truncate">{car.location}</span>
           </p>
         </div>
 
         {/* Specs Grid */}
-        <div className="grid grid-cols-3 gap-2 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-lg">
-          <div className="text-center space-y-0.5">
-            <span className="block text-gray-400">Trans</span>
-            <span className="font-semibold text-gray-700 capitalize">{car.transmission}</span>
+        <div className="grid grid-cols-3 gap-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+          <div className="text-center space-y-1">
+            <span className="block text-slate-400 uppercase tracking-wider text-[10px] font-semibold">Trans</span>
+            <span className="font-semibold text-slate-700 capitalize">{car.transmission}</span>
           </div>
-          <div className="text-center space-y-0.5 border-x">
-            <span className="block text-gray-400">Seats</span>
-            <span className="font-semibold text-gray-700">{car.seats}</span>
+          <div className="text-center space-y-1 border-x border-slate-200">
+            <span className="block text-slate-400 uppercase tracking-wider text-[10px] font-semibold">Seats</span>
+            <span className="font-semibold text-slate-700">{car.seats}</span>
           </div>
-          <div className="text-center space-y-0.5">
-            <span className="block text-gray-400">Fuel</span>
-            <span className="font-semibold text-gray-700 capitalize">{car.fuelType}</span>
+          <div className="text-center space-y-1">
+            <span className="block text-slate-400 uppercase tracking-wider text-[10px] font-semibold">Fuel</span>
+            <span className="font-semibold text-slate-700 capitalize">{car.fuelType}</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t">
+        <div className="flex items-center justify-between pt-2">
           <div>
-            <span className="text-xl font-extrabold text-blue-600">
+            <span className="text-2xl font-extrabold text-slate-900">
               {formatCurrency(car.pricePerDay)}
             </span>
-            <span className="text-xs text-gray-400"> / day</span>
+            <span className="text-sm text-slate-500 font-medium"> / day</span>
           </div>
           <Link
             href={`/cars/${car.id}`}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            className="bg-slate-900 hover:bg-indigo-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-md"
           >
             Details
           </Link>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

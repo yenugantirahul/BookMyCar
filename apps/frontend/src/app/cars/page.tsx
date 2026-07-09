@@ -10,7 +10,7 @@ import { LoadingSpinner } from '@/components/shared/loading-spinner';
 import { EmptyState } from '@/components/shared/empty-state';
 import { ErrorMessage } from '@/components/shared/error-message';
 import { Button } from '@/components/ui/button';
-
+import { motion } from 'framer-motion';
 function CarsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -72,11 +72,24 @@ function CarsPageContent() {
   const totalPages = Math.ceil(total / 12);
   const currentPage = filters.page || 1;
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } }
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8">
+    <div className="container mx-auto px-4 py-12 max-w-7xl space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Explore Fleet</h1>
-        <p className="text-gray-500 mt-1">Browse, filter, and book from our high-quality rental selection.</p>
+        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Explore Fleet</h1>
+        <p className="text-slate-500 mt-2 text-lg">Browse, filter, and book from our high-quality rental selection.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
@@ -98,11 +111,18 @@ function CarsPageContent() {
             />
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8"
+              >
                 {cars.map((car) => (
-                  <CarCard key={car.id} car={car} />
+                  <motion.div key={car.id} variants={itemVariants}>
+                    <CarCard car={car} />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
 
               {/* Pagination */}
               {totalPages > 1 && (
