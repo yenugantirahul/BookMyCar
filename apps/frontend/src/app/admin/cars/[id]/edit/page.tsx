@@ -9,6 +9,7 @@ import { CarForm } from '@/components/admin/car-form';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/shared/loading-spinner';
 import { ErrorMessage } from '@/components/shared/error-message';
 import Link from 'next/link';

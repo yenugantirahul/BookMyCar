@@ -25,8 +25,6 @@ export default function ProfilePage() {
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
 
-  const [updateError, setUpdateError] = useState<string | null>(null);
-
 
   const loadProfile = () => {
     if (!session) return;
