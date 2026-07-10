@@ -99,7 +99,7 @@ export function CarForm({ initialData, onSubmit, loading, submitButtonText }: Ca
 
         <div>
           <Label>Category</Label>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full mt-1 border px-3 py-2 rounded-md bg-gray-50 h-[40px] text-sm focus:outline-none">
+          <select value={category} onChange={(e) => setCategory(e.target.value as typeof category)} className="w-full mt-1 border px-3 py-2 rounded-md bg-gray-50 h-[40px] text-sm focus:outline-none">
             <option value="economy">Economy</option>
             <option value="standard">Standard</option>
             <option value="premium">Premium</option>
@@ -110,7 +110,7 @@ export function CarForm({ initialData, onSubmit, loading, submitButtonText }: Ca
 
         <div>
           <Label>Transmission</Label>
-          <select value={transmission} onChange={(e) => setTransmission(e.target.value)} className="w-full mt-1 border px-3 py-2 rounded-md bg-gray-50 h-[40px] text-sm focus:outline-none">
+          <select value={transmission} onChange={(e) => setTransmission(e.target.value as typeof transmission)} className="w-full mt-1 border px-3 py-2 rounded-md bg-gray-50 h-[40px] text-sm focus:outline-none">
             <option value="manual">Manual</option>
             <option value="automatic">Automatic</option>
           </select>
@@ -123,7 +123,7 @@ export function CarForm({ initialData, onSubmit, loading, submitButtonText }: Ca
 
         <div>
           <Label>Fuel Type</Label>
-          <select value={fuelType} onChange={(e) => setFuelType(e.target.value)} className="w-full mt-1 border px-3 py-2 rounded-md bg-gray-50 h-[40px] text-sm focus:outline-none">
+          <select value={fuelType} onChange={(e) => setFuelType(e.target.value as typeof fuelType)} className="w-full mt-1 border px-3 py-2 rounded-md bg-gray-50 h-[40px] text-sm focus:outline-none">
             <option value="petrol">Petrol</option>
             <option value="diesel">Diesel</option>
             <option value="electric">Electric</option>

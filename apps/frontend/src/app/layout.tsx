@@ -5,6 +5,8 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { Providers } from '@/components/providers';
+import { SyncProfile } from '@/components/sync-profile';
+import { Toaster } from 'react-hot-toast';
 import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
@@ -20,12 +22,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <html lang="en" suppressHydrationWarning className={cn("font-sans antialiased", geist.variable)}>
         <body className="min-h-screen bg-white text-slate-900">
           <Providers>
+            <SyncProfile />
             <Navbar />
             <main className="min-h-[calc(100vh-64px)]">{children}</main>
             <Footer />
+            <Toaster position="bottom-right" />
           </Providers>
         </body>
       </html>
     </ClerkProvider>
   );
 }
+

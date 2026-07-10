@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/providers';
+import { useSupabaseClient } from '@/hooks/use-supabase-client';
 import { getCars, getAdminBookings } from '@/lib/api';
 import type { Car, Booking } from '@/types';
 import { LoadingSpinner } from '@/components/shared/loading-spinner';
 import { ErrorMessage } from '@/components/shared/error-message';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { formatCurrency, formatDateRange, getStatusColor } from '@/lib/utils';
-import { Car as CarIcon, Calendar, Users, DollarSign } from 'lucide-react';
+import { Car as CarIcon, Calendar, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
   const { session } = useAuth();
+  const supabase = useSupabaseClient();
   const [cars, setCars] = useState<Car[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,16 +27,11 @@ export default function AdminDashboardPage() {
 
     try {
       const [carsRes, bookingsRes] = await Promise.all([
-        getCars({ limit: 100 }), // Load up to 100 for aggregation
-        getAdminBookings({ limit: 100 }, session.access_token),
+        getCars({ limit: 100 }, supabase),
+        getAdminBookings({ limit: 100 }, supabase),
       ]);
-
-      if (carsRes.success && bookingsRes.success) {
-        setCars(carsRes.data);
-        setBookings(bookingsRes.data);
-      } else {
-        setError(carsRes.error?.message || bookingsRes.error?.message || 'Failed to load stats');
-      }
+      setCars(carsRes.data);
+      setBookings(bookingsRes.data);
     } catch (err: any) {
       setError(err.message || 'Something went wrong while retrieving dashboard details');
     } finally {
@@ -49,11 +46,12 @@ export default function AdminDashboardPage() {
   if (loading) return <LoadingSpinner message="Calculating dashboard statistics..." />;
   if (error) return <ErrorMessage message={error} retry={loadDashboardData} />;
 
-  // Aggregate metrics
   const totalCars = cars.length;
   const availableCars = cars.filter((c) => c.isAvailable).length;
   const totalBookingsCount = bookings.length;
-  const activeBookingsCount = bookings.filter((b) => b.status === 'active' || b.status === 'confirmed').length;
+  const activeBookingsCount = bookings.filter(
+    (b) => b.status === 'active' || b.status === 'confirmed',
+  ).length;
 
   const totalRevenue = bookings
     .filter((b) => b.status !== 'cancelled')
@@ -62,9 +60,27 @@ export default function AdminDashboardPage() {
   const recentBookings = bookings.slice(0, 5);
 
   const statCards = [
-    { title: 'Total Fleet', value: totalCars, desc: `${availableCars} available`, icon: CarIcon, color: 'text-blue-600' },
-    { title: 'Total Bookings', value: totalBookingsCount, desc: `${activeBookingsCount} active/paid`, icon: Calendar, color: 'text-green-600' },
-    { title: 'Total Revenue', value: formatCurrency(totalRevenue), desc: 'Excluding cancellations', icon: DollarSign, color: 'text-yellow-600' },
+    {
+      title: 'Total Fleet',
+      value: totalCars,
+      desc: `${availableCars} available`,
+      icon: CarIcon,
+      color: 'text-blue-600',
+    },
+    {
+      title: 'Total Bookings',
+      value: totalBookingsCount,
+      desc: `${activeBookingsCount} active/paid`,
+      icon: Calendar,
+      color: 'text-green-600',
+    },
+    {
+      title: 'Total Revenue',
+      value: formatCurrency(totalRevenue),
+      desc: 'Excluding cancellations',
+      icon: DollarSign,
+      color: 'text-yellow-600',
+    },
   ];
 
   return (
@@ -74,7 +90,6 @@ export default function AdminDashboardPage() {
         <p className="text-gray-500 mt-1">Real-time usage and financial health metrics.</p>
       </div>
 
-      {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {statCards.map((stat, idx) => {
           const Icon = stat.icon;
@@ -95,7 +110,6 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      {/* Recent Bookings table */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-bold text-gray-900">Recent Bookings</CardTitle>
@@ -123,9 +137,13 @@ export default function AdminDashboardPage() {
                         {b.car ? `${b.car.make} ${b.car.model}` : 'Vehicle'}
                       </td>
                       <td className="px-4 py-3 text-xs">{formatDateRange(b.startDate, b.endDate)}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-900">{formatCurrency(b.totalAmount)}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900">
+                        {formatCurrency(b.totalAmount)}
+                      </td>
                       <td className="px-4 py-3 text-right">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full uppercase ${getStatusColor(b.status)}`}>
+                        <span
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full uppercase ${getStatusColor(b.status)}`}
+                        >
                           {b.status}
                         </span>
                       </td>

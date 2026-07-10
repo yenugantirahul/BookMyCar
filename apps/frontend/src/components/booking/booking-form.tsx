@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers';
+import { useSupabaseClient } from '@/hooks/use-supabase-client';
 import { createBooking } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import { Calendar } from 'lucide-react';
 export function BookingForm({ car }: { car: Car }) {
   const router = useRouter();
   const { user, session } = useAuth();
+  const supabase = useSupabaseClient();
 
   const [startDate, setStartDate] = useState(getTodayString());
   const [endDate, setEndDate] = useState(addDays(getTodayString(), 1));
@@ -50,14 +52,11 @@ export function BookingForm({ car }: { car: Car }) {
           endDate,
           notes: notes || undefined,
         },
-        session.access_token,
+        user.id,
+        supabase,
       );
 
-      if (res.success) {
-        router.push(`/bookings/${res.data.id}`);
-      } else {
-        setError(res.error?.message ?? 'Failed to create booking');
-      }
+      router.push(`/bookings/${res.data.id}`);
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please check your dates.');
     } finally {

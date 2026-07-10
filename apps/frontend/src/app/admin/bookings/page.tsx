@@ -1,7 +1,10 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/providers';
+import { useSupabaseClient } from '@/hooks/use-supabase-client';
+import { getAdminBookings, updateBookingStatus } from '@/lib/api';
 import { LoadingSpinner } from '@/components/shared/loading-spinner';
 import { ErrorMessage } from '@/components/shared/error-message';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
@@ -11,6 +14,7 @@ import type { Booking } from '@/types';
 
 export default function AdminBookingsPage() {
   const { session } = useAuth();
+  const supabase = useSupabaseClient();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,22 +24,9 @@ export default function AdminBookingsPage() {
     if (!session) return;
     setLoading(true);
     setError(null);
-
-    // Call BFF admin bookings proxy
-    const query = statusFilter ? `?status=${statusFilter}` : '';
-    fetch(`/api/admin/bookings${query}`)
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success || Array.isArray(res.data)) {
-          // BFF proxy wraps response, or lists arrays directly
-          setBookings(res.data || res);
-        } else {
-          setError(res.error?.message ?? 'Failed to load bookings');
-        }
-      })
-      .catch((err) => {
-        setError(err.message || 'Something went wrong while retrieving bookings');
-      })
+    getAdminBookings({ status: statusFilter || undefined, limit: 100 }, supabase)
+      .then((res) => setBookings(res.data))
+      .catch((err) => setError(err.message || 'Something went wrong while retrieving bookings'))
       .finally(() => setLoading(false));
   };
 
@@ -44,25 +35,14 @@ export default function AdminBookingsPage() {
   }, [session, statusFilter]);
 
   const handleUpdateStatus = async (bookingId: string, newStatus: string) => {
-    if (!session) return;
-
     try {
-      const res = await fetch(`/api/admin/bookings/${bookingId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        setBookings((prev) =>
-          prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus as any } : b)),
-        );
-      } else {
-        alert(data.error?.message ?? 'Failed to update booking status');
-      }
+      const res = await updateBookingStatus(bookingId, newStatus, supabase);
+      setBookings((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, status: res.data.status } : b)),
+      );
+      toast.success('Status updated successfully');
     } catch (err: any) {
-      alert(err.message || 'Error updating status');
+      toast.error(err.message || 'Error updating status');
     }
   };
 

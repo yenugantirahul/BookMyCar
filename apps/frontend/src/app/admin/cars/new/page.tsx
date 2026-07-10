@@ -1,8 +1,10 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers';
+import { useSupabaseClient } from '@/hooks/use-supabase-client';
 import { createCar } from '@/lib/api';
 import { CarForm } from '@/components/admin/car-form';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
@@ -12,6 +14,7 @@ import { ArrowLeft } from 'lucide-react';
 export default function AdminNewCarPage() {
   const router = useRouter();
   const { session } = useAuth();
+  const supabase = useSupabaseClient();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (payload: any) => {
@@ -19,13 +22,12 @@ export default function AdminNewCarPage() {
     setLoading(true);
 
     try {
-      const res = await createCar(payload, session.access_token);
-      if (res.success) {
-        // Redirect to edit page so user can upload images
-        router.push(`/admin/cars/${res.data.id}/edit`);
-      } else {
-        throw new Error(res.error?.message ?? 'Failed to create vehicle');
-      }
+      const res = await createCar(payload, supabase);
+      toast.success('Vehicle created successfully!');
+      // Redirect to edit page so user can upload images
+      router.push(`/admin/cars/${res.data.id}/edit`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create vehicle');
     } finally {
       setLoading(false);
     }
@@ -43,7 +45,9 @@ export default function AdminNewCarPage() {
 
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Add New Vehicle</h1>
-        <p className="text-gray-500 mt-1">Enter specifications to introduce a new car to the fleet.</p>
+        <p className="text-gray-500 mt-1">
+          Enter specifications to introduce a new car to the fleet.
+        </p>
       </div>
 
       <Card>

@@ -38,12 +38,8 @@ function CarsPageContent() {
     setError(null);
     getCars(filters)
       .then((res) => {
-        if (res.success) {
-          setCars(res.data);
-          setTotal(res.pagination?.total ?? res.data.length);
-        } else {
-          setError(res.error?.message ?? 'Failed to load cars');
-        }
+        setCars(res.data);
+        setTotal(res.pagination?.total ?? res.data.length);
       })
       .catch((err) => {
         setError(err.message || 'Something went wrong while fetching vehicles');
@@ -82,7 +78,7 @@ function CarsPageContent() {
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } }
+    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } }
   };
 
   return (

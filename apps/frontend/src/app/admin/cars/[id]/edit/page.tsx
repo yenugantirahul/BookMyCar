@@ -1,12 +1,20 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers';
-import { getCar, updateCar, uploadCarImage, deleteCarImage } from '@/lib/api';
+import { useSupabaseClient } from '@/hooks/use-supabase-client';
+import { getCar, updateCar, uploadCarImage, deleteCarImage, setPrimaryImage } from '@/lib/api';
 import type { Car } from '@/types';
 import { CarForm } from '@/components/admin/car-form';
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -19,16 +27,15 @@ export default function AdminEditCarPage({ params }: { params: Promise<{ id: str
   const { id } = use(params);
   const router = useRouter();
   const { session } = useAuth();
+  const supabase = useSupabaseClient();
 
   const [car, setCar] = useState<Car | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Form submit state
   const [submitLoading, setSubmitLoading] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
 
-  // Images upload state
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isPrimaryImage, setIsPrimaryImage] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -37,17 +44,9 @@ export default function AdminEditCarPage({ params }: { params: Promise<{ id: str
   const loadCar = () => {
     setLoading(true);
     setError(null);
-    getCar(id)
-      .then((res) => {
-        if (res.success) {
-          setCar(res.data);
-        } else {
-          setError(res.error?.message ?? 'Vehicle not found');
-        }
-      })
-      .catch((err) => {
-        setError(err.message || 'Failed to fetch vehicle details');
-      })
+    getCar(id, supabase)
+      .then((res) => setCar(res.data))
+      .catch((err) => setError(err.message || 'Failed to fetch vehicle details'))
       .finally(() => setLoading(false));
   };
 
@@ -61,13 +60,12 @@ export default function AdminEditCarPage({ params }: { params: Promise<{ id: str
     setUpdateSuccess(false);
 
     try {
-      const res = await updateCar(id, payload, session.access_token);
-      if (res.success) {
-        setCar(res.data);
-        setUpdateSuccess(true);
-      } else {
-        throw new Error(res.error?.message ?? 'Failed to update vehicle');
-      }
+      const res = await updateCar(id, payload, supabase);
+      setCar(res.data);
+      setUpdateSuccess(true);
+      toast.success('Specifications updated successfully!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update vehicle');
     } finally {
       setSubmitLoading(false);
     }
@@ -81,19 +79,16 @@ export default function AdminEditCarPage({ params }: { params: Promise<{ id: str
     setImageError(null);
 
     try {
-      const res = await uploadCarImage(car.id, imageFile, isPrimaryImage, session.access_token);
-      if (res.success) {
-        setImageFile(null);
-        setIsPrimaryImage(false);
-        // Reset file input
-        const fileInput = document.getElementById('car-image-file') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
-        loadCar(); // Refresh images list
-      } else {
-        setImageError(res.error?.message ?? 'Upload failed');
-      }
+      await uploadCarImage(car.id, imageFile, isPrimaryImage, supabase);
+      setImageFile(null);
+      setIsPrimaryImage(false);
+      const fileInput = document.getElementById('car-image-file') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+      loadCar();
+      toast.success('Image uploaded successfully!');
     } catch (err: any) {
       setImageError(err.message || 'Something went wrong during image upload');
+      toast.error(err.message || 'Something went wrong during image upload');
     } finally {
       setImageLoading(false);
     }
@@ -101,40 +96,38 @@ export default function AdminEditCarPage({ params }: { params: Promise<{ id: str
 
   const handleSetPrimary = async (imageId: string) => {
     if (!session || !car) return;
-
     try {
-      const res = await fetch(`/api/v1/cars/${car.id}/images/${imageId}/primary`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      const data = await res.json();
-      if (data.success) {
-        loadCar();
-      } else {
-        alert(data.error?.message ?? 'Failed to set primary image');
-      }
+      await setPrimaryImage(car.id, imageId, supabase);
+      loadCar();
+      toast.success('Primary image updated');
     } catch (err: any) {
-      alert(err.message || 'Error setting primary image');
+      toast.error(err.message || 'Error setting primary image');
     }
   };
 
   const handleDeleteImage = async (imageId: string) => {
     if (!session || !car || !confirm('Are you sure you want to delete this image?')) return;
-
     try {
-      const res = await deleteCarImage(car.id, imageId, session.access_token);
-      if (res.success) {
-        loadCar();
-      } else {
-        alert(res.error?.message ?? 'Failed to delete image');
-      }
+      await deleteCarImage(car.id, imageId, supabase);
+      loadCar();
+      toast.success('Image deleted');
     } catch (err: any) {
-      alert(err.message || 'Error deleting image');
+      toast.error(err.message || 'Error deleting image');
     }
   };
 
-  if (loading) return <div className="py-24"><LoadingSpinner message="Loading vehicle information..." /></div>;
-  if (error || !car) return <div className="py-24"><ErrorMessage message={error ?? 'Vehicle not found'} retry={loadCar} /></div>;
+  if (loading)
+    return (
+      <div className="py-24">
+        <LoadingSpinner message="Loading vehicle information..." />
+      </div>
+    );
+  if (error || !car)
+    return (
+      <div className="py-24">
+        <ErrorMessage message={error ?? 'Vehicle not found'} retry={loadCar} />
+      </div>
+    );
 
   return (
     <div className="space-y-6">
@@ -151,12 +144,13 @@ export default function AdminEditCarPage({ params }: { params: Promise<{ id: str
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">
             Edit Vehicle: {car.make} {car.model}
           </h1>
-          <p className="text-gray-500 mt-1">Configure vehicle parameters and manage gallery images.</p>
+          <p className="text-gray-500 mt-1">
+            Configure vehicle parameters and manage gallery images.
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Core Specs Form */}
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
@@ -179,7 +173,6 @@ export default function AdminEditCarPage({ params }: { params: Promise<{ id: str
           </Card>
         </div>
 
-        {/* Media / Images Gallery Management */}
         <div className="lg:col-span-1 space-y-6">
           <Card>
             <CardHeader>
@@ -223,17 +216,26 @@ export default function AdminEditCarPage({ params }: { params: Promise<{ id: str
           <Card>
             <CardHeader>
               <CardTitle>Gallery Management</CardTitle>
-              <CardDescription>Existing vehicle photos ({car.images?.length ?? 0} total)</CardDescription>
+              <CardDescription>
+                Existing vehicle photos ({car.images?.length ?? 0} total)
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {(!car.images || car.images.length === 0) ? (
+              {!car.images || car.images.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-6">No images uploaded yet.</p>
               ) : (
                 <div className="space-y-4">
                   {car.images.map((img) => (
-                    <div key={img.id} className="flex items-center justify-between border p-3 rounded-lg bg-gray-50/50">
+                    <div
+                      key={img.id}
+                      className="flex items-center justify-between border p-3 rounded-lg bg-gray-50/50"
+                    >
                       <div className="flex items-center space-x-3">
-                        <img src={img.url} alt="Thumbnail" className="h-10 w-16 object-cover rounded border" />
+                        <img
+                          src={img.url}
+                          alt="Thumbnail"
+                          className="h-10 w-16 object-cover rounded border"
+                        />
                         <div>
                           {img.isPrimary ? (
                             <span className="text-xs font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">

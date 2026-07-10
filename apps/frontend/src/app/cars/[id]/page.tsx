@@ -23,11 +23,7 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
     setError(null);
     getCar(id)
       .then((res) => {
-        if (res.success) {
-          setCar(res.data);
-        } else {
-          setError(res.error?.message ?? 'Vehicle not found');
-        }
+        setCar(res.data);
       })
       .catch((err) => {
         setError(err.message || 'Failed to fetch vehicle details');

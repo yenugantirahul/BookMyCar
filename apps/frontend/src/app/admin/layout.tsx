@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/components/providers';
+import { useSupabaseClient } from '@/hooks/use-supabase-client';
+import { getProfile } from '@/lib/api';
 import { Shield, Car, Calendar, Users, Home } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/loading-spinner';
 
@@ -11,6 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading } = useAuth();
+  const supabase = useSupabaseClient();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -20,14 +23,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     if (user) {
-      fetch('/api/profile')
-        .then((res) => res.json())
+      getProfile(user.id, supabase)
         .then((res) => {
-          if (res.success && res.data?.role === 'admin') {
-            setIsAdmin(true);
-          } else {
-            setIsAdmin(false);
-          }
+          setIsAdmin(res.data.role === 'admin');
         })
         .catch(() => setIsAdmin(false));
     }

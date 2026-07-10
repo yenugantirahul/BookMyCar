@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/providers';
+import { useSupabaseClient } from '@/hooks/use-supabase-client';
 import { getBookings } from '@/lib/api';
 import type { Booking } from '@/types';
 import { BookingCard } from '@/components/booking/booking-card';
@@ -11,7 +12,8 @@ import { ErrorMessage } from '@/components/shared/error-message';
 import Link from 'next/link';
 
 export default function BookingsPage() {
-  const { user, session } = useAuth();
+  const { session } = useAuth();
+  const supabase = useSupabaseClient();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,17 +23,11 @@ export default function BookingsPage() {
     if (!session) return;
     setLoading(true);
     setError(null);
-    getBookings({ status: statusFilter || undefined }, session.access_token)
-      .then((res) => {
-        if (res.success) {
-          setBookings(res.data);
-        } else {
-          setError(res.error?.message ?? 'Failed to load booking history');
-        }
-      })
-      .catch((err) => {
-        setError(err.message || 'Something went wrong while fetching booking history');
-      })
+    getBookings({ status: statusFilter || undefined }, supabase)
+      .then((res) => setBookings(res.data))
+      .catch((err) =>
+        setError(err.message || 'Something went wrong while fetching booking history'),
+      )
       .finally(() => setLoading(false));
   };
 
@@ -39,7 +35,12 @@ export default function BookingsPage() {
     loadBookings();
   }, [session, statusFilter]);
 
-  if (loading) return <div className="py-24"><LoadingSpinner message="Loading your bookings..." /></div>;
+  if (loading)
+    return (
+      <div className="py-24">
+        <LoadingSpinner message="Loading your bookings..." />
+      </div>
+    );
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
@@ -49,7 +50,6 @@ export default function BookingsPage() {
           <p className="text-gray-500 mt-1">Manage and view your vehicle rental history.</p>
         </div>
 
-        {/* Status Filter Tab Group Mock */}
         <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg self-start text-xs font-semibold">
           {[
             { id: '', label: 'All' },

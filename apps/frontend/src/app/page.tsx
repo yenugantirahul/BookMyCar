@@ -44,7 +44,7 @@ export default async function HomePage() {
       `}</style>
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-5 pt-20 pb-16 sm:px-8 sm:pt-28 sm:pb-24">
+      <section className="mx-auto max-w-6xl px-5 pt-20 pb-16 sm:px-8 sm:pt-28 sm:pb-24 overflow-hidden">
         <div className="hero-rise">
           <div className="flex items-center gap-2.5">
             <span className="h-1.5 w-1.5 rounded-full bg-[#C1401A]" />
@@ -56,7 +56,7 @@ export default async function HomePage() {
           <h1 className="mt-6 max-w-4xl text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.03em] sm:text-6xl md:text-7xl">
             The right car for
             <br className="hidden sm:block" />{' '}
-            <span className="font-serif font-normal italic text-[#C1401A]">wherever</span>{' '}
+            <span className="font-serif font-normal italic text-[#C1401A] inline-block">wherever</span>{' '}
             you&apos;re headed.
           </h1>
 

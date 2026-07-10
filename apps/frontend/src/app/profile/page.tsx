@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/providers';
+import { useSupabaseClient } from '@/hooks/use-supabase-client';
 import { getProfile, updateProfile } from '@/lib/api';
 import type { User } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -12,60 +13,49 @@ import { ErrorMessage } from '@/components/shared/error-message';
 import { Check } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { session } = useAuth();
+  const { user, session } = useAuth();
+  const supabase = useSupabaseClient();
 
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Edit form state
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
 
-
   const loadProfile = () => {
-    if (!session) return;
+    if (!session || !user) return;
     setLoading(true);
     setError(null);
-    getProfile(session.access_token)
+    getProfile(user.id, supabase)
       .then((res) => {
-        if (res.success) {
-          setProfile(res.data);
-          setFullName(res.data.fullName ?? '');
-          setPhone(res.data.phone ?? '');
-        } else {
-          setError(res.error?.message ?? 'Failed to load profile');
-        }
+        setProfile(res.data);
+        setFullName(res.data.fullName ?? '');
+        setPhone(res.data.phone ?? '');
       })
-      .catch((err) => {
-        setError(err.message || 'Something went wrong while fetching profile');
-      })
+      .catch((err) => setError(err.message || 'Something went wrong while fetching profile'))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     loadProfile();
-  }, [session]);
+  }, [session, user?.id]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session) return;
+    if (!session || !user) return;
 
     setUpdateLoading(true);
     setUpdateSuccess(false);
     setUpdateError(null);
 
     try {
-      const res = await updateProfile({ fullName, phone }, session.access_token);
-      if (res.success) {
-        setProfile(res.data);
-        setUpdateSuccess(true);
-      } else {
-        setUpdateError(res.error?.message ?? 'Failed to update profile');
-      }
+      const res = await updateProfile(user.id, { fullName, phone }, supabase);
+      setProfile(res.data);
+      setUpdateSuccess(true);
     } catch (err: any) {
       setUpdateError(err.message || 'Failed to update profile details');
     } finally {
@@ -73,18 +63,31 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading) return <div className="py-24"><LoadingSpinner message="Loading your profile..." /></div>;
-  if (error || !profile) return <div className="py-24"><ErrorMessage message={error ?? 'Profile not found'} retry={loadProfile} /></div>;
+  if (loading)
+    return (
+      <div className="py-24">
+        <LoadingSpinner message="Loading your profile..." />
+      </div>
+    );
+  if (error || !profile)
+    return (
+      <div className="py-24">
+        <ErrorMessage message={error ?? 'Profile not found'} retry={loadProfile} />
+      </div>
+    );
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 font-sans">Account Settings</h1>
-        <p className="text-gray-500 mt-1">Manage your public credentials and personal information.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 font-sans">
+          Account Settings
+        </h1>
+        <p className="text-gray-500 mt-1">
+          Manage your public credentials and personal information.
+        </p>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-8">
-        {/* Edit profile form */}
         <form onSubmit={handleUpdateProfile} className="space-y-6">
           {updateError && (
             <div className="p-3 bg-red-50 text-red-700 text-sm rounded border border-red-200">

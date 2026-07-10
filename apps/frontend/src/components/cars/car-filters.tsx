@@ -5,7 +5,7 @@ import type { CarFilters as Filters } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CAR_CATEGORIES, CAR_TRANSMISSIONS, CAR_FUEL_TYPES } from '@/types'; // or define locally
+// Constants defined locally below
 import { Filter, X } from 'lucide-react';
 
 const CATEGORIES = ['economy', 'standard', 'premium', 'suv', 'luxury'];

@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/components/providers';
+import { useSupabaseClient } from '@/hooks/use-supabase-client';
 import { useRouter } from 'next/navigation';
-import { Car, User as UserIcon, LogOut, Shield } from 'lucide-react';
+import { Car, Shield } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getProfile } from '@/lib/api';
 import { SignInButton, UserButton } from '@clerk/nextjs';
@@ -31,24 +32,20 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 export function Navbar() {
   const { user, session, signOut } = useAuth();
   const router = useRouter();
+  const supabase = useSupabaseClient();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (user && session) {
-      // Fetch profile to check role
-      getProfile(session.access_token)
+      getProfile(user.id, supabase)
         .then((res) => {
-          if (res.success && res.data?.role === 'admin') {
-            setIsAdmin(true);
-          } else {
-            setIsAdmin(false);
-          }
+          setIsAdmin(res.data?.role === 'admin');
         })
         .catch(() => setIsAdmin(false));
     } else {
       setIsAdmin(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 bg-white/75 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 shadow-sm transition-all">
@@ -83,7 +80,7 @@ export function Navbar() {
                 </Link>
               )}
               <div className="flex items-center space-x-2 border-l border-slate-200 pl-4">
-                <UserButton afterSignOutUrl="/" />
+                <UserButton />
               </div>
             </>
           ) : (

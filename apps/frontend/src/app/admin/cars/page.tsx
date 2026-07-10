@@ -1,7 +1,9 @@
 'use client';
+import { toast } from 'react-hot-toast';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/providers';
+import { useSupabaseClient } from '@/hooks/use-supabase-client';
 import { getCars, deleteCar } from '@/lib/api';
 import type { Car } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -14,6 +16,7 @@ import Link from 'next/link';
 
 export default function AdminCarsPage() {
   const { session } = useAuth();
+  const supabase = useSupabaseClient();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,17 +24,9 @@ export default function AdminCarsPage() {
   const loadCars = () => {
     setLoading(true);
     setError(null);
-    getCars({ limit: 100 })
-      .then((res) => {
-        if (res.success) {
-          setCars(res.data);
-        } else {
-          setError(res.error?.message ?? 'Failed to fetch vehicles');
-        }
-      })
-      .catch((err) => {
-        setError(err.message || 'Something went wrong while fetching vehicles');
-      })
+    getCars({ limit: 100 }, supabase)
+      .then((res) => setCars(res.data))
+      .catch((err) => setError(err.message || 'Something went wrong while fetching vehicles'))
       .finally(() => setLoading(false));
   };
 
@@ -40,17 +35,15 @@ export default function AdminCarsPage() {
   }, []);
 
   const handleDelete = async (carId: string) => {
-    if (!session || !confirm('Are you sure you want to delete this vehicle? This action is permanent.')) return;
+    if (!session || !confirm('Are you sure you want to delete this vehicle? This action is permanent.'))
+      return;
 
     try {
-      const res = await deleteCar(carId, session.access_token);
-      if (res.success) {
-        setCars((prev) => prev.filter((c) => c.id !== carId));
-      } else {
-        alert(res.error?.message ?? 'Failed to delete vehicle');
-      }
+      await deleteCar(carId, supabase);
+      setCars((prev) => prev.filter((c) => c.id !== carId));
+      toast.success('Vehicle deleted successfully');
     } catch (err: any) {
-      alert(err.message || 'Failed to delete vehicle');
+      toast.error(err.message || 'Failed to delete vehicle');
     }
   };
 
@@ -106,17 +99,27 @@ export default function AdminCarsPage() {
                         <div className="flex items-center space-x-3">
                           <span className="text-base">🚗</span>
                           <div>
-                            <div>{car.make} {car.model}</div>
-                            <div className="text-xs text-gray-400 font-mono">{car.licensePlate} ({car.year})</div>
+                            <div>
+                              {car.make} {car.model}
+                            </div>
+                            <div className="text-xs text-gray-400 font-mono">
+                              {car.licensePlate} ({car.year})
+                            </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 capitalize">{getCategoryLabel(car.category)}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-900">{formatCurrency(car.pricePerDay)}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900">
+                        {formatCurrency(car.pricePerDay)}
+                      </td>
                       <td className="px-4 py-3">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full uppercase ${
-                          car.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
+                        <span
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full uppercase ${
+                            car.isAvailable
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
                           {car.isAvailable ? 'Available' : 'Unavailable'}
                         </span>
                       </td>

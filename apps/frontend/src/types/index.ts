@@ -1,6 +1,6 @@
 // Types shared between frontend components and API calls
 
-export type UserRole = 'customer' | 'admin';
+export type UserRole = 'user' | 'admin';
 
 export interface User {
   id: string;
@@ -40,6 +40,7 @@ export interface Car {
   description: string | null;
   isAvailable: boolean;
   createdAt: string;
+  updatedAt: string;
   images?: CarImage[];
   primaryImageUrl?: string | null;
 }
